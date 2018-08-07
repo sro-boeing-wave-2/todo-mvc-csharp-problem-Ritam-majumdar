@@ -33,7 +33,7 @@ namespace ProjectX
             if (Environment.IsEnvironment("Testing"))
             {
                 services.AddDbContext<NoteContext>(options =>
-                    options.UseInMemoryDatabase("TestingDB"));
+                    options.UseInMemoryDatabase("NoteContext"));
             }
             else
             {

@@ -34,8 +34,8 @@ namespace XUnitTestProject1
         {
             var Response = await _client.GetAsync("/api/Notes");
             var ResponseBody = await Response.Content.ReadAsStringAsync();
-            
-            Assert.Equal(0, ResponseBody.Length);
+            //Console.WriteLine(ResponseBody);
+            Assert.Equal(2, ResponseBody.Length);
         }
 
         [Fact]
@@ -47,8 +47,8 @@ namespace XUnitTestProject1
                 Message = "Text in the first Note",
                 CheckList = new List<CheckList>
                 {
-                    new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-                    new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
+                    new CheckList{Checklist="checklist 1 in first Note"},
+                    new CheckList {Checklist="checklist 2 in first Note"}
 
                 },
                 Label = new List<Label>
@@ -68,29 +68,30 @@ namespace XUnitTestProject1
             response.EnsureSuccessStatusCode();
             var responseString = await response.Content.ReadAsStringAsync();
             var note = JsonConvert.DeserializeObject<Note>(responseString);
-            Assert.Equal("First Note", note.Title);
-            Console.WriteLine(note.Id);
+            //Assert.Equal("First Note", note.Title);
+            Assert.True(note.IsEquals(noteToAdd));
+            //Console.WriteLine(note.Id);
         }
         [Fact]
         public async Task TestPutAsync()
         {
-            var noteToPost = new Note
-            {
-                Title = "First Note",
-                Message = "Text in the first Note",
-                CheckList = new List<CheckList>
-                {
-                    new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-                    new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
+            //var noteToPost = new Note
+            //{
+            //    Title = "First Note",
+            //    Message = "Text in the first Note",
+            //    CheckList = new List<CheckList>
+            //    {
+            //        new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
+            //        new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
 
-                },
-                Label = new List<Label>
-                {
-                    new Label{label="label 1 in first Note"},
-                    new Label{label="label 2 in first Note"}
-                },
-                Pinned = true
-            };
+            //    },
+            //    Label = new List<Label>
+            //    {
+            //        new Label{label="label 1 in first Note"},
+            //        new Label{label="label 2 in first Note"}
+            //    },
+            //    Pinned = true
+            //};
             var noteToPut = new Note
             {
                 Id = 1,
@@ -98,8 +99,8 @@ namespace XUnitTestProject1
                 Message = "Text in the first Note",
                 CheckList = new List<CheckList>
                 {
-                    new CheckList{Id = 1, Checklist="checklist 1 in first Note", IsChecked = false},
-                    new CheckList{Id = 2, Checklist="checklist 2 in first Note", IsChecked = true}
+                    new CheckList{Id = 1, Checklist="checklist 1 in first Note"},
+                    new CheckList{Id = 2, Checklist="checklist 2 in first Note"}
 
                 },
                 Label = new List<Label>
@@ -109,18 +110,24 @@ namespace XUnitTestProject1
                 },
                 Pinned = true
             };
-            var contentPost = JsonConvert.SerializeObject(noteToPost);
-            var stringContentPost = new StringContent(contentPost, Encoding.UTF8, "application/json");
+            //var contentPost = JsonConvert.SerializeObject(noteToPost);
+            //var stringContentPost = new StringContent(contentPost, Encoding.UTF8, "application/json");
             var contentPut = JsonConvert.SerializeObject(noteToPut);
             var stringContentPut = new StringContent(contentPut, Encoding.UTF8, "application/json");
             // Act
-            var responsePost = await _client.PostAsync("/api/Notes", stringContentPost);
+            //var responsePost = await _client.PostAsync("/api/Notes", stringContentPost);
             var responsePut = await _client.PutAsync("/api/Notes/1", stringContentPut);
             // Assert
             responsePut.EnsureSuccessStatusCode();
             var responseString = await responsePut.Content.ReadAsStringAsync();
             var note = JsonConvert.DeserializeObject<Note>(responseString);
-            Assert.Equal("Updated Note", note.Title);
+            //Assert.Equal("Updated Note", note.Title);
+            Console.WriteLine(noteToPut);
+
+            Console.WriteLine(note);
+            Assert.True(note.IsEquals(noteToPut));
+
+            
             Console.WriteLine(note.Id);
 
 
@@ -129,33 +136,33 @@ namespace XUnitTestProject1
         [Fact]
         public async Task TestDeleteAsync()
         {
-            var noteToAdd = new Note
-            {
-                Title = "First Note",
-                Message = "Text in the first Note",
-                CheckList = new List<CheckList>
-                {
-                    new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-                    new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
+            //var noteToAdd = new Note
+            //{
+            //    Title = "First Note",
+            //    Message = "Text in the first Note",
+            //    CheckList = new List<CheckList>
+            //    {
+            //        new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
+            //        new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
 
-                },
-                Label = new List<Label>
-                {
-                    new Label{label="label 1 in first Note"},
-                    new Label{label="label 2 in first Note"}
-                },
-                Pinned = true
-            };
-            var content = JsonConvert.SerializeObject(noteToAdd);
-            var stringContent = new StringContent(content, Encoding.UTF8, "application/json");
+            //    },
+            //    Label = new List<Label>
+            //    {
+            //        new Label{label="label 1 in first Note"},
+            //        new Label{label="label 2 in first Note"}
+            //    },
+            //    Pinned = true
+            //};
+            //var content = JsonConvert.SerializeObject(noteToAdd);
+            //var stringContent = new StringContent(content, Encoding.UTF8, "application/json");
 
-            // Act
-            var responsePost = await _client.PostAsync("/api/Notes", stringContent);
+            //// Act
+            //var responsePost = await _client.PostAsync("/api/Notes", stringContent);
             var responseDelete = await _client.DeleteAsync("/api/Notes?Id=1");
             var Response = await _client.GetAsync("/api/Notes");
             var ResponseBody = await Response.Content.ReadAsStringAsync();
 
-            Assert.Equal(0, ResponseBody.Length);
+            Assert.Equal(2, ResponseBody.Length);
 
         }
         //[Fact]
