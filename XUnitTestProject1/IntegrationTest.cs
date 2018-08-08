@@ -22,20 +22,51 @@ namespace XUnitTestProject1
     public class IntegrationTest
     {
         private HttpClient _client;
+
+        private NoteContext _context;
         public IntegrationTest()
         {
-            var host = new TestServer(new WebHostBuilder()
+            
+            var host = new TestServer(
+                new WebHostBuilder()
                 .UseEnvironment("Testing")
-                .UseStartup<Startup>());
+                .UseStartup<Startup>()
+                );
+            _context = host.Host.Services.GetService(typeof(NoteContext)) as NoteContext;
             _client = host.CreateClient();
+            _context.Note.AddRange(TestNoteInitial);
+            _context.SaveChanges();
+
+
         }
+        Note TestNoteInitial = new Note
+        {
+            Title = "First Note",
+            Message = "Text in the first Note",
+            CheckList = new List<CheckList>
+                {
+                    new CheckList{Checklist="checklist 1 in first Note"},
+                    new CheckList {Checklist="checklist 2 in first Note"}
+
+                },
+            Label = new List<Label>
+                {
+                    new Label{label="label 1 in first Note"},
+                    new Label{label="label 2 in first Note"}
+                },
+            Pinned = true
+        };
+
         [Fact]
         public async Task TestGetRequestAsync()
         {
-            var Response = await _client.GetAsync("/api/Notes");
-            var ResponseBody = await Response.Content.ReadAsStringAsync();
-            //Console.WriteLine(ResponseBody);
-            Assert.Equal(2, ResponseBody.Length);
+            
+            var response = await _client.GetAsync("/api/Notes");
+            var responsestring = await response.Content.ReadAsStringAsync();
+            var responsenote = JsonConvert.DeserializeObject<List<Note>>(responsestring);
+            Console.WriteLine(responsenote.ToString());
+            Assert.Equal(1, responsenote.Count);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
@@ -75,23 +106,7 @@ namespace XUnitTestProject1
         [Fact]
         public async Task TestPutAsync()
         {
-            //var noteToPost = new Note
-            //{
-            //    Title = "First Note",
-            //    Message = "Text in the first Note",
-            //    CheckList = new List<CheckList>
-            //    {
-            //        new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-            //        new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
-
-            //    },
-            //    Label = new List<Label>
-            //    {
-            //        new Label{label="label 1 in first Note"},
-            //        new Label{label="label 2 in first Note"}
-            //    },
-            //    Pinned = true
-            //};
+            
             var noteToPut = new Note
             {
                 Id = 1,
@@ -134,97 +149,35 @@ namespace XUnitTestProject1
 
         }
         [Fact]
+        public async void TestGetById()
+        {
+            var response = await _client.GetAsync("/api/Notes?Id=1");
+            var responsestring = await response.Content.ReadAsStringAsync();
+            var responsenote = JsonConvert.DeserializeObject<List<Note>>(responsestring);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.True(TestNoteInitial.IsEquals(responsenote[0]));
+        }
+        [Fact]
+        public async void TestGetByTitle()
+        {
+            var response = await _client.GetAsync("/api/Notes?Title=First Note");
+            var responsestring = await response.Content.ReadAsStringAsync();
+            var responsenote = JsonConvert.DeserializeObject<List<Note>>(responsestring);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.True(TestNoteInitial.IsEquals(responsenote[0]));
+        }
+
+        [Fact]
         public async Task TestDeleteAsync()
         {
-            //var noteToAdd = new Note
-            //{
-            //    Title = "First Note",
-            //    Message = "Text in the first Note",
-            //    CheckList = new List<CheckList>
-            //    {
-            //        new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-            //        new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
-
-            //    },
-            //    Label = new List<Label>
-            //    {
-            //        new Label{label="label 1 in first Note"},
-            //        new Label{label="label 2 in first Note"}
-            //    },
-            //    Pinned = true
-            //};
-            //var content = JsonConvert.SerializeObject(noteToAdd);
-            //var stringContent = new StringContent(content, Encoding.UTF8, "application/json");
-
-            //// Act
-            //var responsePost = await _client.PostAsync("/api/Notes", stringContent);
             var responseDelete = await _client.DeleteAsync("/api/Notes?Id=1");
-            var Response = await _client.GetAsync("/api/Notes");
-            var ResponseBody = await Response.Content.ReadAsStringAsync();
-
-            Assert.Equal(2, ResponseBody.Length);
+            var responseCode = responseDelete.StatusCode;
+            Assert.Equal(HttpStatusCode.NoContent, responseCode);
+            
 
         }
-        //[Fact]
-        //public async Task TestGetSpecificAsync()
-        //{
-        //    var noteToAdd1 = new Note
-        //    {
-        //        Title = "First Note",
-        //        Message = "Text in the first Note",
-        //        CheckList = new List<CheckList>
-        //        {
-        //            new CheckList{Checklist="checklist 1 in first Note", IsChecked = false},
-        //            new CheckList {Checklist="checklist 2 in first Note", IsChecked = true}
-
-        //        },
-        //        Label = new List<Label>
-        //        {
-        //            new Label{label="label 1 in first Note"},
-        //            new Label{label="label 2 in first Note"}
-        //        },
-        //        Pinned = true
-        //    };
-        //    var noteToAdd2 = new Note
-        //    {
-        //        Title = "Second Note",
-        //        Message = "Text in the second Note",
-        //        CheckList = new List<CheckList>
-        //        {
-        //            new CheckList{Checklist="checklist 1 in second Note", IsChecked = false},
-        //            new CheckList {Checklist="checklist 2 in second Note", IsChecked = true}
-
-        //        },
-        //        Label = new List<Label>
-        //        {
-        //            new Label{label="label 1 in second Note"},
-        //            new Label{label="label 2 in second Note"}
-        //        },
-        //        Pinned = true
-        //    };
-        //    var content1 = JsonConvert.SerializeObject(noteToAdd1);
-        //    var stringContent1 = new StringContent(content1, Encoding.UTF8, "application/json");
-        //    var content2 = JsonConvert.SerializeObject(noteToAdd2);
-        //    var stringContent2 = new StringContent(content2, Encoding.UTF8, "application/json");
-        //    // Act
-        //    var response1 = await _client.PostAsync("/api/Notes", stringContent1);
-        //    var response2 = await _client.PostAsync("/api/Notes", stringContent2);
-
-        //    // Assert
-        //    response1.EnsureSuccessStatusCode();
-        //    var responseString1 = await response1.Content.ReadAsStringAsync();
-        //    var note1 = JsonConvert.DeserializeObject<Note>(responseString1);
-        //    response2.EnsureSuccessStatusCode();
-        //    var responseString2 = await response2.Content.ReadAsStringAsync();
-        //    var note2 = JsonConvert.DeserializeObject<Note>(responseString1);
-        //    var Response = await _client.GetAsync("/api/Notes?Id=1");
-        //    var ResponseBody = await Response.Content.ReadAsStringAsync();
-        //    var noteSpecific = JsonConvert.DeserializeObject<Note>(ResponseBody);
-            
-        //    Assert.Equal("First Note", noteSpecific.Title);
-        //    Console.WriteLine(note1.Id);
-        //    Console.WriteLine(ResponseBody);
-        //}
+        
+        
         
 
     }
